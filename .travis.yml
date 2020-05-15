@@ -26,5 +26,3 @@ script:
   # Basic role syntax check
   - ansible-playbook hardening.yml -i inventory --syntax-check
 
-  # Run role
-  - ansible-playbook hardening.yml -i inventory --connection=local
