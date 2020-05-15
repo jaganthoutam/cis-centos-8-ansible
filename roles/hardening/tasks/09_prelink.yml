@@ -1,0 +1,36 @@
+---
+# CCE-27078-5
+- name: sysconfig prelink
+  stat:
+    path: /etc/sysconfig/prelink
+  register: sysconfig_prelink_exists
+
+- name: etc prelink config
+  stat:
+    path: /etc/prelink.conf
+  register: etc_prelink_exists
+
+- name: disable prelinking
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "PRELINKING=no"
+    dest: /etc/sysconfig/prelink
+    mode: 0644
+    state: present
+    create: 'yes'
+  when: ansible_os_family == "RedHat"
+  tags:
+    - prelink
+    - security
+
+- name: return to non-prelinked state
+  become: 'yes'
+  become_method: sudo
+  command: prelink -ua
+  when: sysconfig_prelink_exists or etc_prelink_exists
+  ignore_errors: true
+  tags:
+    - prelink
+    - security
+...

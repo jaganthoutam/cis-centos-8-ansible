@@ -1,0 +1,21 @@
+---
+- name: remove users
+  become: 'yes'
+  become_method: sudo
+  user:
+    name: "{{ item }}"
+    state: absent
+    remove: 'yes'
+  with_items:
+    - games
+    - gnats
+    - irc
+    - list
+    - news
+    - sync
+    - uucp
+  ignore_errors: true
+  tags:
+    - users
+    - security
+...

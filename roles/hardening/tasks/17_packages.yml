@@ -1,0 +1,182 @@
+---
+# aide: CCE-27096-7
+# xinetd: CCE-27354-0
+# telnet: CCE-27401-9
+# rsh: CCE-27342-5
+# yp*: CCE-27385-4
+# tftp: CCE-80213-2
+# talk: CCE-27432-4
+# sshd: CCE-80215-7
+# avahi: CCE-80338-7
+# UBTU-16-010010
+# UBTU-16-010050
+
+- name: merge package lists
+  set_fact:
+    packages_merged: "{{ packages_debian + packages_redhat }}"
+
+- name: create needrestart directory
+  file:
+    path: /etc/needrestart/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+    recurse: 'yes'
+  when: '"needrestart" in packages_merged'
+  tags:
+    - packages
+    - security
+
+- name: stat needrestart configuration directory
+  become: 'yes'
+  become_method: sudo
+  stat:
+    path: /etc/needrestart/conf.d
+  register: needrestart_directory
+
+- name: configure needrestart
+  lineinfile:
+    path: /etc/needrestart/conf.d/00-restart.conf
+    line: "$nrconf{restart} = 'l';"
+    create: 'yes'
+    owner: root
+    group: root
+    mode: '0644'
+  when: needrestart_directory.stat.exists
+
+- name: debian family package installation
+  become: 'yes'
+  become_method: sudo
+  apt:
+    name: "{{ packages_debian }}"
+    state: latest
+    install_recommends: 'no'
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  when: ansible_os_family == "Debian"
+  tags:
+    - apt
+    - packages
+    - security
+
+- name: ubuntu update-notifier-common package installation
+  become: 'yes'
+  become_method: sudo
+  apt:
+    name: "update-notifier-common"
+    state: latest
+    install_recommends: 'no'
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  when: ansible_distribution == "Ubuntu"
+  tags:
+    - apt
+    - packages
+
+- name: fedora epel installation
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: "epel-release"
+    state: latest
+  when: ansible_os_family == "RedHat" and (not ansible_distribution == "Fedora")
+  tags:
+    - yum
+    - packages
+    - security
+
+- name: redhat family package installation
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: "{{ item }}"
+    state: latest
+  with_items:
+    - "{{ packages_redhat }}"
+  when: ansible_os_family == "RedHat"
+  ignore_errors: true
+  notify:
+    - enable haveged
+  tags:
+    - yum
+    - packages
+    - security
+
+- name: debian family package removal
+  become: 'yes'
+  become_method: sudo
+  apt:
+    name: "{{ packages_blacklist }}"
+    state: absent
+    purge: 'yes'
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  when: ansible_os_family == "Debian"
+  ignore_errors: true
+  tags:
+    - apt
+    - packages
+    - security
+
+- name: redhat family package removal
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: "{{ item }}"
+    state: absent
+  with_items:
+    - "{{ packages_blacklist }}"
+  when: ansible_os_family == "RedHat"
+  ignore_errors: true
+  tags:
+    - yum
+    - packages
+    - security
+
+- name: virtualbox package installation
+  become: 'yes'
+  become_method: sudo
+  apt:
+    name: "{{ packages }}"
+    state: latest
+    install_recommends: 'no'
+  vars:
+    packages:
+      - virtualbox-guest-dkms
+      - virtualbox-guest-utils
+  when: ansible_bios_version == "VirtualBox" and
+        ansible_distribution == "Ubuntu"
+  tags:
+    - apt
+    - packages
+    - virtualbox
+    - security
+
+- name: vmware package installation
+  become: 'yes'
+  become_method: sudo
+  apt:
+    name: open-vm-tools
+    state: latest
+    install_recommends: 'no'
+  when: ansible_bios_version == "VMWare"
+  tags:
+    - apt
+    - yum
+    - packages
+    - vmware
+    - security
+
+- name: rng-tools package installation
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: rng-tools
+    state: latest
+  when: ansible_local.cpuinfo_rdrand
+  tags:
+    - rng-tools
+    - packages
+    - security
+...

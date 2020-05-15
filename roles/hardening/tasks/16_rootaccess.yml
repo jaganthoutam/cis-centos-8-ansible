@@ -1,0 +1,42 @@
+---
+- name: access.conf
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/security/access.conf.j2
+    dest: /etc/security/access.conf
+    backup: 'yes'
+    mode: 0644
+    owner: root
+    group: root
+  tags:
+    - access.conf
+    - security
+
+# CCE-27318-5
+# CCE-27268-2
+- name: securetty
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/securetty.j2
+    dest: /etc/securetty
+    backup: 'yes'
+    mode: 0644
+    owner: root
+    group: root
+  tags:
+    - securetty
+    - security
+
+- name: mask debug-shell
+  become: 'yes'
+  become_method: sudo
+  systemd:
+    name: debug-shell.service
+    masked: 'yes'
+  tags:
+    - systemd
+    - debug-shell
+    - security
+...

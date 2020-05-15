@@ -1,0 +1,32 @@
+---
+galaxy_info:
+  author: Thomas Sjögren
+  description: CentOS, Debian and Ubuntu server hardening, systemd edition
+  license: apache
+  min_ansible_version: 2.8
+  platforms:
+    - name: EL
+      versions:
+        - 8
+    - name: Ubuntu
+      versions:
+        - bionic
+        - focal
+    - name: Debian
+      versions:
+        - buster
+    - name: Fedora
+      versions:
+        - 30
+        - 31
+  galaxy_tags:
+    - centos
+    - debian
+    - fedora
+    - ubuntu
+    - security
+    - hardening
+    - system
+    - systemd
+    - disa
+    - cis

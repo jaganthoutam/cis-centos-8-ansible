@@ -1,0 +1,7 @@
+---
+- hosts: hardening
+  remote_user: root
+  become: true
+  roles:
+    - hardening
+...

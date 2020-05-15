@@ -1,0 +1,144 @@
+---
+- name: apt update
+  become: 'yes'
+  become_method: sudo
+  apt:
+    update_cache: 'yes'
+    cache_valid_time: 1800
+  when: ansible_os_family == "Debian"
+  tags:
+    - apt
+    - security
+
+- name: apt upgrade
+  become: 'yes'
+  become_method: sudo
+  apt:
+    upgrade: safe
+  notify:
+    - apt-get clean
+    - apt-get autoremove
+  environment:
+    PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  when: ansible_os_family == "Debian"
+  tags:
+    - apt
+    - security
+
+- name: python-rpm installation
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: "python2-rpm"
+    state: latest
+  when: ansible_distribution == "RedHat"
+  tags:
+    - yum
+    - packages
+    - security
+    - firewalld
+
+- name: link dnf.conf
+  become: 'yes'
+  become_method: sudo
+  file:
+    src: /etc/dnf/dnf.conf
+    dest: /etc/yum.conf
+    owner: root
+    group: root
+    state: link
+  when: ansible_distribution == "Fedora"
+
+# CCE-26957-1
+- name: import RedHat RPM key
+  become: 'yes'
+  become_method: sudo
+  rpm_key:
+    state: present
+    key: https://sks-keyservers.net/pks/lookup?op=get&search=0x{{ item }}
+  with_items:
+    - "{{ redhat_rpm_key }}"
+  when: ansible_distribution == "RedHat"
+  tags:
+    - yum
+    - security
+
+# CCE-26989-4
+- name: set yum.conf gpgcheck
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    regexp: "^gpgcheck="
+    line: "gpgcheck=1"
+    dest: /etc/yum.conf
+    mode: 0644
+    state: present
+    create: 'no'
+    backrefs: 'yes'
+  when: ansible_os_family == "RedHat"
+  tags:
+    - yum
+    - security
+
+# CCE-80346-0
+- name: set yum.conf clean_requirements
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "clean_requirements_on_remove=1"
+    dest: /etc/yum.conf
+    mode: 0644
+    state: present
+    create: 'yes'
+    insertafter: "[main]"
+  when: ansible_os_family == "RedHat"
+  tags:
+    - yum
+    - security
+
+# CCE-80347-8
+- name: set yum.conf localpkg_gpgcheck
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "localpkg_gpgcheck=1"
+    dest: /etc/yum.conf
+    mode: 0644
+    state: present
+    create: 'yes'
+    insertafter: "[main]"
+  when: ansible_os_family == "RedHat"
+  tags:
+    - yum
+    - security
+
+# CCE-80348-6
+- name: comment yum.conf repo_gpgcheck
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "# repo_gpgcheck=1"
+    dest: /etc/yum.conf
+    mode: 0644
+    state: present
+    create: 'yes'
+    insertafter: "[main]"
+  when: ansible_os_family == "RedHat"
+  tags:
+    - yum
+    - security
+
+# CCE-26895-3
+- name: yum update
+  become: 'yes'
+  become_method: sudo
+  package:
+    name: '*'
+    state: latest
+  notify:
+    - yum clean
+  when: ansible_os_family == "RedHat"
+  tags:
+    - yum
+    - security
+...

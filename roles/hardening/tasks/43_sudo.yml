@@ -1,0 +1,40 @@
+---
+- name: sudo use_pty
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "Defaults use_pty"
+    dest: /etc/sudoers.d/011_use_pty
+    mode: 0440
+    state: present
+    create: 'yes'
+  tags:
+    - sudo
+    - security
+
+- name: sudo disable pwfeedback
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "Defaults !pwfeedback"
+    dest: /etc/sudoers.d/013_pwfeedback
+    mode: 0440
+    state: present
+    create: 'yes'
+  tags:
+    - sudo
+    - security
+
+- name: sudo disable visiblepw
+  become: 'yes'
+  become_method: sudo
+  lineinfile:
+    line: "Defaults !visiblepw"
+    dest: /etc/sudoers.d/014_visiblepw
+    mode: 0440
+    state: present
+    create: 'yes'
+  tags:
+    - sudo
+    - security
+...

@@ -1,0 +1,121 @@
+---
+- name: check cron.daily aide
+  stat:
+    path: /etc/cron.daily/aide
+  register: aidecron
+
+- name: aide service
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: lib/systemd/system/aidecheck.service.j2
+    dest: /lib/systemd/system/aidecheck.service
+    backup: 'yes'
+    mode: 0644
+    owner: root
+    group: root
+  when: not aidecron.stat.exists
+  tags:
+    - aide
+    - security
+
+# CCE-26952-2
+- name: aide timer
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: lib/systemd/system/aidecheck.timer.j2
+    dest: /lib/systemd/system/aidecheck.timer
+    backup: 'yes'
+    mode: 0644
+    owner: root
+    group: root
+  when: not aidecron.stat.exists
+  notify:
+    - systemctl daemon-reload
+    - enable aidecheck
+  tags:
+    - aide
+    - security
+
+- name: add aide Debian dir exclusions
+  become: 'yes'
+  blockinfile:
+    path: /etc/aide/aide.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    backup: 'yes'
+    insertafter: EOF
+    block: |
+      !/var/lib/lxcfs
+      !/var/lib/private/systemd
+      !/var/log/journal
+      !/var/log/audit
+  when: ansible_os_family == "Debian"
+  tags:
+    - aide
+    - security
+
+- name: stat Debian aide.db
+  become: 'yes'
+  become_method: sudo
+  stat:
+    path: /var/lib/aide/aide.db
+  register: ubuaidedb
+  when: ansible_os_family == "Debian"
+  tags:
+    - aide
+    - security
+
+- name: add aide RedHat dir exclusions
+  become: 'yes'
+  blockinfile:
+    path: /etc/aide.conf
+    marker: "# {mark} ANSIBLE MANAGED BLOCK"
+    backup: 'yes'
+    insertafter: EOF
+    block: |
+      !/var/lib/lxcfs
+      !/var/lib/private/systemd
+      !/var/log/journal
+      !/var/log/audit
+  when: ansible_os_family == "RedHat"
+  tags:
+    - aide
+    - security
+
+- name: stat RedHat aide.db
+  become: 'yes'
+  become_method: sudo
+  stat:
+    path: /var/lib/aide/aide.db.gz
+  register: rhelaidedb
+  when: ansible_os_family == "RedHat"
+  tags:
+    - aide
+    - security
+
+# CCE-27220-3
+- name: initialize RedHat aide
+  become: 'yes'
+  become_method: sudo
+  command: aide --init -B 'database_out=file:/var/lib/aide/aide.db.gz'
+  when: ansible_os_family == "RedHat" and not rhelaidedb.stat.exists
+  tags:
+    - aide
+    - security
+
+- name: initialize Debian aide
+  become: 'yes'
+  become_method: sudo
+  expect:
+    command: aideinit
+    timeout: null
+    responses:
+      Question:
+        - 'Overwrite /var/lib/aide/aide.db [yN]?': 'y'
+  when: ansible_os_family == "Debian" and not ubuaidedb.stat.exists
+  tags:
+    - skip_ansible_lint
+    - aide
+    - security
+...

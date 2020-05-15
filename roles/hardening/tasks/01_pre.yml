@@ -1,0 +1,63 @@
+---
+- name: create custom facts directory
+  become: 'yes'
+  become_method: sudo
+  file:
+    path: /etc/ansible/facts.d
+    recurse: true
+    state: directory
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - fact
+
+- name: systemd version fact
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/ansible/facts.d/systemd_version.fact
+    dest: /etc/ansible/facts.d/systemd_version.fact
+    backup: 'yes'
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - systemd
+    - fact
+
+- name: cpuinfo rdrand fact
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/ansible/facts.d/cpuinfo_rdrand.fact
+    dest: /etc/ansible/facts.d/cpuinfo_rdrand.fact
+    backup: 'yes'
+    mode: 0755
+    owner: root
+    group: root
+  tags:
+    - cpuinfo
+    - rdrand
+    - fact
+
+- name: reboot required fact
+  become: 'yes'
+  become_method: sudo
+  template:
+    src: etc/ansible/facts.d/reboot_required.fact
+    dest: /etc/ansible/facts.d/reboot_required.fact
+    backup: 'yes'
+    mode: 0755
+    owner: root
+    group: root
+  when: ansible_distribution == "Ubuntu"
+  tags:
+    - reboot
+    - fact
+
+- name: update facts
+  setup: ~
+  tags:
+    - fact
+...
