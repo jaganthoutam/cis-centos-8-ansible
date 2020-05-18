@@ -50,6 +50,34 @@ echo "ansible_version=$(ansible --version | grep '^ansible')" >> ~/lynis-report.
 
 ```
 
+#    Output Lynis security scan details:
 
+```
+================================================================================
+
+  Lynis security scan details:
+
+  Hardening index : 79 [###############     ]
+  Tests performed : 268
+  Plugins enabled : 2
+
+  Components:
+  - Firewall               [V]
+  - Malware scanner        [V]
+
+  Scan mode:
+  Normal [V]  Forensics [ ]  Integration [ ]  Pentest [ ]
+
+  Lynis modules:
+  - Compliance status      [?]
+  - Security audit         [V]
+  - Vulnerability scan     [V]
+
+  Files:
+  - Test and debug information      : /var/log/lynis.log
+  - Report data                     : /var/log/lynis-report.dat
+
+================================================================================
+```
 
 
