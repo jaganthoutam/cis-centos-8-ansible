@@ -9,7 +9,7 @@
     
     
   * Run Playbook
-    ```bash
+```bash
     ansible-playbook -i inventory hardening.yml -b --user=root
     ----
     ----
@@ -22,7 +22,7 @@
     PLAY RECAP
     ********************************************************************************************************************
     192.168.10.74              : ok=58   changed=45   unreachable=0    failed=1    skipped=19   rescued=0    ignored=2
- ```
+```
 
 
 # Test CIS Score 
