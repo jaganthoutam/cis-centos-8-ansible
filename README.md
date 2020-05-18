@@ -3,7 +3,7 @@
   * inventory file Server IPAdds that you want to run OS Hardening Script 
     ```bash
     [hardening]
-    192.168.10.74
+    192.168.10.74  #<========change the Server's IP Add that you want OS Hardening
     ```
     
     
